@@ -6,7 +6,7 @@ npm install
 ```
 ### Para Escuchar Json-server
 
-json-server --watch db.json --port 3000
+npm run start:server
 
 ### Compiles and hot-reloads for development
 ```
