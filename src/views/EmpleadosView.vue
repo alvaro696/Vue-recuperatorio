@@ -16,9 +16,10 @@
 
             <div class="mb-6 col-lg-6">
                 <div class="input-group">
-                    <span class="input-group-text" id="description-search-text"><i class="bi bi-search"></i> Buscar nombre de empleado </span>
-                    <input type="search" class="form-control" id="description-search" placeholder="Escrina y presione Enter"
-                        @search="this.toSearch = $event.target.value">
+                    <span class="input-group-text" id="description-search-text"><i class="bi bi-search"></i> Buscar
+                        nombre de empleado </span>
+                    <input type="search" class="form-control" id="description-search"
+                        placeholder="Escrina y presione Enter" @search="this.toSearch = $event.target.value">
                 </div>
             </div>
         </div>
@@ -161,78 +162,7 @@ export default {
                 placa: '',
                 color: ''
             },
-            vehiculosArray: [
-                {
-                    empleado: 'Juan Pérez',
-                    area: 'Produccion',
-                    type: 'Camion',
-                    placa: 'ABC-123',
-                    color: 'Blanco'
-                },
-                {
-                    empleado: 'María González',
-                    area: 'Finanzas',
-                    type: 'Automovil',
-                    placa: 'XYZ-456',
-                    color: 'Negro'
-                },
-                {
-                    empleado: 'Carlos Ramírez',
-                    area: 'Contabilidad',
-                    type: 'Vagoneta',
-                    placa: 'LMN-789',
-                    color: 'Gris'
-                },
-                {
-                    empleado: 'Ana López',
-                    area: 'Produccion',
-                    type: 'Motocicleta',
-                    placa: 'JKL-321',
-                    color: 'Rojo'
-                },
-                {
-                    empleado: 'Pedro Sánchez',
-                    area: 'Finanzas',
-                    type: 'Bus',
-                    placa: 'GHI-654',
-                    color: 'Azul'
-                },
-                {
-                    empleado: 'Laura Fernández',
-                    area: 'Contabilidad',
-                    type: 'Automovil',
-                    placa: 'OPQ-987',
-                    color: 'Verde'
-                },
-                {
-                    empleado: 'Ricardo Torres',
-                    area: 'Produccion',
-                    type: 'Motocicleta',
-                    placa: 'RST-111',
-                    color: 'Amarillo'
-                },
-                {
-                    empleado: 'Carmen Ríos',
-                    area: 'Finanzas',
-                    type: 'Vagoneta',
-                    placa: 'UVW-222',
-                    color: 'Plateado'
-                },
-                {
-                    empleado: 'José Méndez',
-                    area: 'Contabilidad',
-                    type: 'Bus',
-                    placa: 'XYZ-333',
-                    color: 'Negro'
-                },
-                {
-                    empleado: 'Elena Castro',
-                    area: 'Produccion',
-                    type: 'Camion',
-                    placa: 'DEF-444',
-                    color: 'Blanco'
-                }
-            ],
+            vehiculosArray: [],
 
             itemSelected: null,
             indexSelected: null,
@@ -241,22 +171,47 @@ export default {
             toSearch: ''
         }
     },
+
+    mounted() {
+        this.fetchVehiculos();
+    },
     methods: {
-        save() {
+        async fetchVehiculos() {
+            try {
+                const response = await fetch('http://localhost:3000/vehiculos');
+                this.vehiculosArray = await response.json();
+            } catch (error) {
+                console.error("Error al obtener datos:", error);
+            }
+        },
+        async save() {
             if (this.new_auto.empleado && this.new_auto.area && this.new_auto.type && this.new_auto.placa && this.new_auto.color) {
-                this.vehiculosArray.push({ ...this.new_auto });
-                this.new_auto.empleado = '';
-                this.new_auto.area = '';
-                this.new_auto.type = '';
-                this.new_auto.placa = '';
-                this.new_auto.color = '';
+                try {
+                    const response = await fetch('http://localhost:3000/vehiculos', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(this.new_auto)
+                    });
+                    const nuevoVehiculo = await response.json();
+                    this.vehiculosArray.push(nuevoVehiculo);
+
+                    this.new_auto = { empleado: '', area: '', type: '', placa: '', color: '' };
+                } catch (error) {
+                    console.error("Error al agregar vehículo:", error);
+                }
             } else {
                 alert("Todos los campos son obligatorios.");
             }
         },
-        remove(index) {
+        async remove(index) {
+            const vehiculo = this.vehiculosArray[index];
             if (confirm("¿Está seguro de eliminar este ítem?")) {
-                this.vehiculosArray.splice(index, 1);
+                try {
+                    await fetch(`http://localhost:3000/vehiculos/${vehiculo.id}`, { method: "DELETE" });
+                    this.vehiculosArray.splice(index, 1);
+                } catch (error) {
+                    console.error("Error al eliminar vehículo:", error);
+                }
             }
         },
         edit(index) {
@@ -265,34 +220,34 @@ export default {
             const editModal = new bootstrap.Modal(document.getElementById('editModal'));
             editModal.show();
         },
-        saveEdit() {
-            this.vehiculosArray[this.indexSelected] = { ...this.itemSelected };
+        async saveEdit() {
+            if (!this.itemSelected) return;
+            try {
+                await fetch(`http://localhost:3000/vehiculos/${this.itemSelected.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(this.itemSelected)
+                });
 
-            const modalElement = document.getElementById('editModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-            modalInstance.hide();
+                this.vehiculosArray[this.indexSelected] = { ...this.itemSelected };
 
-            this.itemSelected = null;
-            this.indexSelected = null;
-            alert('DAtos Guardados');
+                const modalElement = document.getElementById('editModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                modalInstance.hide();
+
+                this.itemSelected = null;
+                this.indexSelected = null;
+                alert('Datos Guardados');
+            } catch (error) {
+                console.error("Error al actualizar vehículo:", error);
+            }
         },
-
         getList() {
-            let result = this.vehiculosArray.filter((item) => {
-                if (this.toSearch) {
-                    return item.empleado.includes(this.toSearch);
-                }
-                return true;
+            return this.vehiculosArray.filter((item) => {
+                return (!this.toSearch || item.empleado.includes(this.toSearch)) &&
+                    (!this.toFilter || item.type === this.toFilter);
             });
-            return result.filter((item) => {
-                if (this.toFilter) {
-                    return item.type === this.toFilter;
-                }
-                return true;
-            });
-            // return this.vehiculosArray;
         }
-
     }
 }
 </script>

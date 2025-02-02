@@ -1,0 +1,28 @@
+{
+  "vehiculos": [
+    {
+      "id": "1",
+      "empleado": "Juan Pérez Editado",
+      "area": "Produccion",
+      "type": "Camion",
+      "placa": "ABC-1234",
+      "color": "NEGRO"
+    },
+    {
+      "id": "2",
+      "empleado": "María González",
+      "area": "Finanzas",
+      "type": "Automovil",
+      "placa": "XYZ-456",
+      "color": "Negro"
+    },
+    {
+      "id": "002a",
+      "empleado": "Nuevo Empleado",
+      "area": "Produccion",
+      "type": "Automovil",
+      "placa": "1234LOP",
+      "color": "BLANCO"
+    }
+  ]
+}
